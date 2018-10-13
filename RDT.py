@@ -115,8 +115,6 @@ class RDT:
                 # get info
                 info = self.byte_buffer[0:length]
 
-                #print info[20:]
-
                 # if the information is not corrupt
                 if not Packet.corrupt(info):
                     # create packet from buffer content
@@ -124,7 +122,6 @@ class RDT:
 
                     # if NAK resend message
                     if ac.msg_S == 'NAK':
-                        print 'got NAK'
                         # clear corrupt message
                         self.byte_buffer = self.byte_buffer[length:]
                         # resend data
@@ -142,7 +139,6 @@ class RDT:
 
                 # if corrupt
                 else:
-                    print 'Corrupt (send)'
                     # clear corrupt message
                     self.byte_buffer = self.byte_buffer[length:]
                     # resend data
@@ -187,9 +183,6 @@ class RDT:
 
                     self.seq_num += 1
 
-                    # remove the packet bytes from the buffer
-                    #self.byte_buffer = self.byte_buffer[length:]
-
                     # actually send
                     self.network.udt_send(ac.get_byte_S())
 
@@ -202,17 +195,11 @@ class RDT:
                     # resend ACK
                     ac = Packet(p.seq_num, 'ACK')
 
-                    # remove the packet bytes from the buffer
-                    #self.byte_buffer = self.byte_buffer[length:]
-
                     self.network.udt_send(ac.get_byte_S())
                     return ret_S  # no usable data
             # if corrupt
             else:
-                print 'corrupt (rec)'
-                # clear corrupt message
-                #self.byte_buffer = self.byte_buffer[length:]
-                # send Nak
+               # send Nak
                 nak = Packet(self.seq_num, 'NAK')
                 self.network.udt_send(nak.get_byte_S())
                 return None  # no usable data
