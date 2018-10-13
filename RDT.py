@@ -137,7 +137,8 @@ class RDT:
                         # update seq num
                         self.seq_num += 1
                         return None
-                    return
+                    else:
+                        return None
 
                 # if corrupt
                 else:
