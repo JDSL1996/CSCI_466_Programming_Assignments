@@ -1,27 +1,15 @@
-<<<<<<< HEAD
 import Network_3_0
-=======
-import Network
->>>>>>> 9208c7cf517c03c8f430b3d3890b9541e9d8f5fb
 import argparse
 from time import sleep
 import hashlib
 import time
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 9208c7cf517c03c8f430b3d3890b9541e9d8f5fb
 class Packet:
     ## the number of bytes used to store packet length
     seq_num_S_length = 10
     length_S_length = 10
     ## length of md5 checksum in hex
-<<<<<<< HEAD
     checksum_length = 32 
-=======
-    checksum_length = 32
->>>>>>> 9208c7cf517c03c8f430b3d3890b9541e9d8f5fb
         
     def __init__(self, seq_num, msg_S):
         self.seq_num = seq_num
@@ -47,11 +35,7 @@ class Packet:
         checksum_S = checksum.hexdigest()
         #compile into a string
         return length_S + seq_num_S + checksum_S + self.msg_S
-<<<<<<< HEAD
    
-=======
-
->>>>>>> 9208c7cf517c03c8f430b3d3890b9541e9d8f5fb
     
     @staticmethod
     def corrupt(byte_S):
@@ -75,11 +59,7 @@ class RDT:
     byte_buffer = '' 
 
     def __init__(self, role_S, server_S, port):
-<<<<<<< HEAD
         self.network = Network_3_0.NetworkLayer(role_S, server_S, port)
-=======
-        self.network = Network.NetworkLayer(role_S, server_S, port)
->>>>>>> 9208c7cf517c03c8f430b3d3890b9541e9d8f5fb
     
     def disconnect(self):
         self.network.disconnect()
@@ -111,7 +91,6 @@ class RDT:
             
     
     def rdt_2_1_send(self, msg_S):
-<<<<<<< HEAD
         p = Packet(self.seq_num, msg_S)
         self.network.udt_send(p.get_byte_S())
 
@@ -229,12 +208,6 @@ class RDT:
                 self.network.udt_send(nak.get_byte_S())
                 return None  # no usable data
 
-=======
-        pass
-
-    def rdt_2_1_receive(self):
-        pass
->>>>>>> 9208c7cf517c03c8f430b3d3890b9541e9d8f5fb
     
     def rdt_3_0_send(self, msg_S):
         timeout = 1  # send the next message if no response
@@ -312,10 +285,7 @@ class RDT:
                     self.byte_buffer = self.byte_buffer[length:]
                     # resend data
                     self.network.udt_send(p.get_byte_S())
-<<<<<<< HEAD
-=======
 
->>>>>>> 9208c7cf517c03c8f430b3d3890b9541e9d8f5fb
         
     def rdt_3_0_receive(self):
         ret_S = None
@@ -374,10 +344,7 @@ class RDT:
                 nak = Packet(self.seq_num, 'NAK')
                 self.network.udt_send(nak.get_byte_S())
                 return None  # no usable data
-<<<<<<< HEAD
         
-=======
->>>>>>> 9208c7cf517c03c8f430b3d3890b9541e9d8f5fb
 
 if __name__ == '__main__':
     parser =  argparse.ArgumentParser(description='RDT implementation.')
