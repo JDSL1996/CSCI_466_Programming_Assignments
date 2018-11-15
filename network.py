@@ -141,7 +141,7 @@ class Router:
         #save neighbors and interfeces on which we connect to them
         self.cost_D = cost_D    # {neighbor: {interface: cost}}
         #TODO: set up the routing table for connected hosts
-        self.rt_tbl_D = {}      # {destination: {router: cost}}
+        self.rt_tbl_D = {'H2': {'RB': 1}, 'H1': {'RA': 1}}      # {destination: {router: cost}}
         print('%s: Initialized routing table' % self)
         self.print_routes()
 
@@ -210,7 +210,10 @@ class Router:
     ## Print routing table
     def print_routes(self):
         #TODO: print the routes as a two dimensional table
-        print(self.rt_tbl_D)
+
+        for key in self.rt_tbl_D.keys():
+            print(key)
+
 
                 
     ## thread target for the host to keep forwarding data
