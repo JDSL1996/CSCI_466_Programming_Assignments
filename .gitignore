@@ -3,6 +3,8 @@ __pycache*
 *.sublime-project
 *.sublime-workspace
 .python-version
-bin/python3.6
 lib/python*
 *.xml
+venv
+idea
+*.iml
