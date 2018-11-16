@@ -141,7 +141,7 @@ class Router:
         #save neighbors and interfeces on which we connect to them
         self.cost_D = cost_D    # {neighbor: {interface: cost}}
         #TODO: set up the routing table for connected hosts
-        self.rt_tbl_D = {'H2': {'RB': 1}, 'H1': {'RA': 1}}      # {destination: {router: cost}}
+        self.rt_tbl_D = {'H2': {'RB': 1, 'RA': 1}}#, 'H1': {'RA': 1, 'RB': 1}}      # {destination: {router: cost}}
         print('%s: Initialized routing table' % self)
         self.print_routes()
 
@@ -211,8 +211,27 @@ class Router:
     def print_routes(self):
         #TODO: print the routes as a two dimensional table
 
-        for key in self.rt_tbl_D.keys():
-            print(key)
+        print(self.rt_tbl_D.__len__())
+
+        # {destination: {router: cost}}
+        # self.rt_tbl_D = {'H2': {'RB': 1, 'RA': 1}, 'H1': {'RA': 1, 'RB': 1}}
+        header = "| " + str(self) + " | "
+        row = ""
+        for destination in self.rt_tbl_D.keys():
+            header = header + destination + " | "
+            # print(self.rt_tbl_D[destination])
+            # print(self.rt_tbl_D[destination].keys())
+            # row = row + "\n" + row
+            rout = "| "
+            rowCost = ""
+            for router in self.rt_tbl_D[destination].keys():
+                rout = rout + router + " |  "
+                cost = self.rt_tbl_D[destination][router]
+                rowCost = rowCost + str(cost) + " |  "
+            row = row + rout + rowCost + "\n"
+
+        print(header)
+        print(row)
 
 
                 
