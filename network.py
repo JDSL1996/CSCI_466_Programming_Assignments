@@ -141,7 +141,7 @@ class Router:
         #save neighbors and interfeces on which we connect to them
         self.cost_D = cost_D    # {neighbor: {interface: cost}}
         #TODO: set up the routing table for connected hosts
-        self.rt_tbl_D = {'H2': {'RB': 1, 'RA': 1}}#, 'H1': {'RA': 1, 'RB': 1}}      # {destination: {router: cost}}
+        self.rt_tbl_D = {'H1': {'RA': 1, 'RB': 2}, 'H2': {'RA': 4, 'RB': 3}, 'RA': {'RA': 0, 'RB': 1}}      # {destination: {router: cost}}
         print('%s: Initialized routing table' % self)
         self.print_routes()
 
@@ -214,25 +214,40 @@ class Router:
         print(self.rt_tbl_D.__len__())
 
         # {destination: {router: cost}}
-        # self.rt_tbl_D = {'H2': {'RB': 1, 'RA': 1}, 'H1': {'RA': 1, 'RB': 1}}
+        # self.rt_tbl_D = {'H2': {'RB': 3, 'RA': 4}, 'H1': {'RA': 1, 'RB': 2}, 'RA': {'RA': 0, 'RB': 1}}
         header = "| " + str(self) + " | "
-        row = ""
+        route = []
+        cost = []
+
         for destination in self.rt_tbl_D.keys():
             header = header + destination + " | "
-            # print(self.rt_tbl_D[destination])
-            # print(self.rt_tbl_D[destination].keys())
-            # row = row + "\n" + row
-            rout = "| "
-            rowCost = ""
             for router in self.rt_tbl_D[destination].keys():
-                rout = rout + router + " |  "
-                cost = self.rt_tbl_D[destination][router]
-                rowCost = rowCost + str(cost) + " |  "
-            row = row + rout + rowCost + "\n"
+                # get 3 4 1 2 0 1
+                # want 3 2 1 4 1 0
+                if not route.__contains__(router):
+                    route.append(router)
+                    # rout = rout + router + " |  "
+                    cost.append(self.rt_tbl_D[destination][router])
+                else:
+                    cost.insert(route.index(router), self.rt_tbl_D[destination][router])
+                print(cost)
+                    # route.append(str(self.rt_tbl_D[destination][router]))
+                # else:
+                #     cost.insert(route.index(router), self.rt_tbl_D[destination][router])
+                # rowCost = rowCost + str(cost) + " |  "
+            # if row.__contains__(router):
+            #     row = row + "\n"
+            # else:
+            #     row = row + rout + rowCost + "\n"
 
         print(header)
-        print(row)
-
+        # printCost = ""
+        for row in range(route.__len__()):
+            printCost = "| " + route[row] + " |"
+            for cos in range(self.rt_tbl_D.__len__()):
+                printCost = printCost + "  " + str(cost.pop()) + " |"
+            print(printCost)
+            # printCost = ""
 
                 
     ## thread target for the host to keep forwarding data
