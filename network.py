@@ -140,8 +140,13 @@ class Router:
         self.intf_L = [Interface(max_queue_size) for _ in range(len(cost_D))]
         #save neighbors and interfeces on which we connect to them
         self.cost_D = cost_D    # {neighbor: {interface: cost}}
-        #TODO: set up the routing table for connected hosts
-        self.rt_tbl_D = {'H1': {'RA': 1, 'RB': 2}, 'H2': {'RA': 4, 'RB': 3}, 'RA': {'RA': 0, 'RB': 1}}      # {destination: {router: cost}}
+        # Done: set up the routing table for connected hosts
+
+        for neighbor in cost_D.keys():
+            for interface in cost_D[neighbor].keys():
+                self.rt_tbl_D = {str(neighbor): {str(self): cost_D[neighbor][interface]}}
+
+        self.rt_tbl_D.update({str(self): {str(self): 0}})    # {destination: {router: cost}}
         print('%s: Initialized routing table' % self)
         self.print_routes()
 
