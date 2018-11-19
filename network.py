@@ -189,8 +189,10 @@ class Router:
     # @param i Interface number on which to send out a routing update
     def send_routes(self, i):
         # TODO: Send out a routing table update
-        #create a routing table update packet
-        p = NetworkPacket(0, 'control', 'DUMMY_ROUTING_TABLE')
+        # create a routing table update packet
+        s = str(self) + str(self.rt_tbl_D)
+
+        p = NetworkPacket(0, 'control', s)
         try:
             print('%s: sending routing update "%s" from interface %d' % (self, p, i))
             self.intf_L[i].put(p.to_byte_S(), 'out', True)
@@ -206,12 +208,18 @@ class Router:
         # possibly send out routing updates
         print('%s: Received routing update %s from interface %d' % (self, p, i))
 
+        # who's routing table this is
+        p_from = p.data_S[0:2]
+        # the routing table
+        rec_table = p.data_S[2:]
+
+        # r = "{.+?}" % rec_table
+        #
+        # print(r)
         
     ## Print routing table
     def print_routes(self):
         # Done: print the routes as a two dimensional table
-
-        # TODO: make table complete then each router for destination one will be every possible router
 
         # assuming complete table: destination one contains each router
 
