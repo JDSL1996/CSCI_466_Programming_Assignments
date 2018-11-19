@@ -209,46 +209,32 @@ class Router:
         
     ## Print routing table
     def print_routes(self):
-        #TODO: print the routes as a two dimensional table
+        # Done: print the routes as a two dimensional table
 
-        print(self.rt_tbl_D.__len__())
+        # TODO: make table complete then each router for destination one will be every possible router
 
-        # {destination: {router: cost}}
-        # self.rt_tbl_D = {'H2': {'RB': 3, 'RA': 4}, 'H1': {'RA': 1, 'RB': 2}, 'RA': {'RA': 0, 'RB': 1}}
+        # assuming complete table: destination one contains each router
+
         header = "| " + str(self) + " | "
+        d1 = ""
         route = []
-        cost = []
 
+        # gets the full header and sets the first destination to get router list
         for destination in self.rt_tbl_D.keys():
             header = header + destination + " | "
-            for router in self.rt_tbl_D[destination].keys():
-                # get 3 4 1 2 0 1
-                # want 3 2 1 4 1 0
-                if not route.__contains__(router):
-                    route.append(router)
-                    # rout = rout + router + " |  "
-                    cost.append(self.rt_tbl_D[destination][router])
-                else:
-                    cost.insert(route.index(router), self.rt_tbl_D[destination][router])
-                print(cost)
-                    # route.append(str(self.rt_tbl_D[destination][router]))
-                # else:
-                #     cost.insert(route.index(router), self.rt_tbl_D[destination][router])
-                # rowCost = rowCost + str(cost) + " |  "
-            # if row.__contains__(router):
-            #     row = row + "\n"
-            # else:
-            #     row = row + rout + rowCost + "\n"
-
+            d1 = destination
         print(header)
-        # printCost = ""
-        for row in range(route.__len__()):
-            printCost = "| " + route[row] + " |"
-            for cos in range(self.rt_tbl_D.__len__()):
-                printCost = printCost + "  " + str(cost.pop()) + " |"
-            print(printCost)
-            # printCost = ""
 
+        # gets each router if complete table
+        for router in self.rt_tbl_D[d1].keys():
+            route.append(router)
+
+        # print each row
+        for router in route:
+            row = "| " + router + " |  "
+            for dest in self.rt_tbl_D.keys():
+                row = row + str(self.rt_tbl_D[dest][router]) + " |  "
+            print(row)
                 
     ## thread target for the host to keep forwarding data
     def run(self):
