@@ -275,16 +275,13 @@ class Router:
             for dest in self.cost_D.keys():
                 for interface in self.cost_D[dest]:
                     self.send_routes(interface)
-
-        self.print_routes()
         
     ## Print routing table
     def print_routes(self):
         # Done: print the routes as a two dimensional table
 
-        header = "| " + str(self) + " | "
+        header = "  " + str(self) + " | "
         route = []
-
         # gets the full header and sets the first destination to get router list
         for destination in self.rt_tbl_D.keys():
             header = header + destination + " | "
@@ -300,6 +297,8 @@ class Router:
             for dest in self.rt_tbl_D.keys():
                 row = row + str(self.rt_tbl_D[dest][router]) + " |  "
             print(row)
+
+        print("")
                 
     ## thread target for the host to keep forwarding data
     def run(self):
