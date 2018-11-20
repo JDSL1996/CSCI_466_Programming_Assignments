@@ -245,30 +245,37 @@ class Router:
                 # if self does not contain this destination, add it
                 if destination not in self.rt_tbl_D:
                     # at DV cost
-                    self.rt_tbl_D.update(
-                        {destination: {route: (dist[destination][route])}})
+                    self.rt_tbl_D[destination] = {}
 
-                    # and set how current router can reach new node
-                    self.rt_tbl_D.update(
-                        {destination: {self.name: 9}})
+                # and set how each router can reach new node
+                self.rt_tbl_D[destination][route] = dist[destination][route]
 
-                # if destination does exist check for lower cost
+        # for each destination in current routing table
+        for destination in self.rt_tbl_D:
+            # if we are destination -> skip
+            if destination == self.name:
+                continue
+
+            min = 100
+            # if current router has link to host it has the shortest path
+            if self.name in self.rt_tbl_D[destination]:
+                min = self.rt_tbl_D[destination][self.name]
+
+            for route in self.rt_tbl_D[destination]:
+                # if we are the route cost is cost by us
+                if route == self.name:
+                    cost = self.rt_tbl_D[destination][route]
+                # otherwise its our cost plus the distance vector
                 else:
-                    # new cost = received cost + current cost to use that interface
-                    new_cost = dist[destination][route]
+                    cost = self.rt_tbl_D[destination][route] + self.rt_tbl_D[route][self.name]
 
-                    # if route not exist create high cost to reach
-                    if route not in self.rt_tbl_D[destination]:
-                        # and initialize all other costs to reach
-                        for d in self.rt_tbl_D.keys():
-                            if route not in self.rt_tbl_D[d]:
-                                self.rt_tbl_D[d].update({route: 9})
-
-                    # if new cost is less than current cost for that router to that destination
-                    if new_cost < self.rt_tbl_D[destination][route]:
-                        # update current cost
-                        self.rt_tbl_D[destination][route] = new_cost
-                        need_to_update = True
+                # if the minimum changed update the minimum
+                if cost < min:
+                    need_to_update = True
+                    # update current cost
+                    min = cost
+            # update routing table (possibly back to old numbers)
+            self.rt_tbl_D[destination][self.name] = min
 
         if need_to_update:
             # update neighbors
