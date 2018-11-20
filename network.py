@@ -143,12 +143,15 @@ class Router:
         self.cost_D = cost_D    # {neighbor: {interface: cost}}
         # Done: set up the routing table for connected hosts
 
+        # initialize dictionary
+        self.rt_tbl_D = {}
+
         # for each neighbor by connected interface
         for neighbor in cost_D.keys():
             # for each interface id
             for interface in cost_D[neighbor].keys():
                 # update routing table to reflect cost to that neighbor from self
-                self.rt_tbl_D = {str(neighbor): {str(self): cost_D[neighbor][interface]}}
+                self.rt_tbl_D.update({neighbor: {self.name: cost_D[neighbor][interface]}})
 
         # add self to routing table at cost 0 for completeness/updating
         self.rt_tbl_D.update({str(self): {str(self): 0}})    # {destination: {router: cost}}
@@ -205,7 +208,7 @@ class Router:
         dist = {}
         # for each destination
         for destination in self.rt_tbl_D:
-            # be sure its really empty / only one sends of each destination
+            # initialize dictionary at destination
             dist[destination] = {}
             # add the cost to this destination as the cost to get there from this location
             dist[destination][self.name] = self.rt_tbl_D[destination][self.name]
@@ -226,40 +229,70 @@ class Router:
     ## forward the packet according to the routing table
     #  @param p Packet containing routing information
     def update_routes(self, p, i):
-        #TODO: add logic to update the routing tables and
+        #Done: add logic to update the routing tables and
         # possibly send out routing updates
         print('%s: Received routing update %s from interface %d' % (self, p, i))
 
-        # # who's routing table this is
-        # p_from = p.data_S[0:2]
-        # # the routing table
-        # rec_table = p.data_S[2:]
+        # get distance table as a dictionary by json loads
+        dist = json.loads(p.data_S)
 
-        # r = re.match("{.+?}", rec_table)
-        # r = re.match("'.+?:.+?}", rec_table)
-        #
-        # print("This is r ******************")
-        # print(r)
+        need_to_update = False
+
+        # for each destination in Distance vector (other routers destination list)
+        for destination in dist.keys():
+            # for the sending router named route (single router sending updates)
+            for route in dist[destination]:
+                # if self does not contain this destination, add it
+                if destination not in self.rt_tbl_D:
+                    # at DV cost
+                    self.rt_tbl_D.update(
+                        {destination: {route: (dist[destination][route])}})
+
+                    # and set how current router can reach new node
+                    self.rt_tbl_D.update(
+                        {destination: {self.name: 9}})
+
+                # if destination does exist check for lower cost
+                else:
+                    # new cost = received cost + current cost to use that interface
+                    new_cost = dist[destination][route]
+
+                    # if route not exist create high cost to reach
+                    if route not in self.rt_tbl_D[destination]:
+                        # and initialize all other costs to reach
+                        for d in self.rt_tbl_D.keys():
+                            if route not in self.rt_tbl_D[d]:
+                                self.rt_tbl_D[d].update({route: 9})
+
+                    # if new cost is less than current cost for that router to that destination
+                    if new_cost < self.rt_tbl_D[destination][route]:
+                        # update current cost
+                        self.rt_tbl_D[destination][route] = new_cost
+                        need_to_update = True
+
+        if need_to_update:
+            # update neighbors
+            for dest in self.cost_D.keys():
+                for interface in self.cost_D[dest]:
+                    self.send_routes(interface)
+
+        self.print_routes()
         
     ## Print routing table
     def print_routes(self):
         # Done: print the routes as a two dimensional table
 
-        # assuming complete table: destination one contains each router
-
         header = "| " + str(self) + " | "
-        d1 = ""
         route = []
 
         # gets the full header and sets the first destination to get router list
         for destination in self.rt_tbl_D.keys():
             header = header + destination + " | "
-            d1 = destination
+            # gets each router
+            for router in self.rt_tbl_D[destination].keys():
+                if router not in route:
+                    route.append(router)
         print(header)
-
-        # gets each router if complete table
-        for router in self.rt_tbl_D[d1].keys():
-            route.append(router)
 
         # print each row
         for router in route:
