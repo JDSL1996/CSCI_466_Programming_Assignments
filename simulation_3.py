@@ -1,5 +1,5 @@
-import network
-import link
+import network_3 as network
+import link_3 as link
 import threading
 from time import sleep
 import sys
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     sleep(simulation_time)  #let the tables converge
     print("Converged routing tables")
     for obj in object_L:
-        if str(type(obj)) == "<class 'network.Router'>":
+        if str(type(obj)) == "<class 'network_3.Router'>":
             obj.print_routes()
 
     #send packet from host 1 to host 2
