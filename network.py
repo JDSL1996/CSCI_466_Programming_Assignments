@@ -190,9 +190,39 @@ class Router:
             # TODO: Here you will need to implement a lookup into the 
             # forwarding table to find the appropriate outgoing interface
             # for now we assume the outgoing interface is 1
-            self.intf_L[1].put(p.to_byte_S(), 'out', True)
+
+            # set shortest to largest value and path to meaningless value
+            shortest = 9
+            path = 9
+
+            # for each router capable of getting to the destination
+            for router in self.rt_tbl_D[p.dst]:
+                # skipping this router since we cannot send packets to ourselves
+                if router == self.name:
+                    continue
+
+                # get the cost of the route
+                test_cost = self.rt_tbl_D[p.dst][router]
+
+                # if it is less than the current shortest update
+                if shortest > test_cost:
+                    shortest = test_cost
+                    for interface in self.cost_D[router]:
+                        path = interface
+
+            # for each neighbor
+            for neighbor in self.cost_D:
+                # check if the neighbor is the destination
+                if p.dst == neighbor:
+                    # get the interface
+                    for interface in self.cost_D[neighbor]:
+                        path = interface
+
+            # send the packet on the shortest interface
+            self.intf_L[path].put(p.to_byte_S(), 'out', True)
+
             print('%s: forwarding packet "%s" from interface %d to %d' % \
-                (self, p, i, 1))
+                (self, p, i, path))
         except queue.Full:
             print('%s: packet "%s" lost on interface %d' % (self, p, i))
             pass
