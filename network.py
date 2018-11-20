@@ -1,5 +1,6 @@
 import queue
 import threading
+import json
 
 
 ## wrapper class for a queue of packets
@@ -142,10 +143,14 @@ class Router:
         self.cost_D = cost_D    # {neighbor: {interface: cost}}
         # Done: set up the routing table for connected hosts
 
+        # for each neighbor by connected interface
         for neighbor in cost_D.keys():
+            # for each interface id
             for interface in cost_D[neighbor].keys():
+                # update routing table to reflect cost to that neighbor from self
                 self.rt_tbl_D = {str(neighbor): {str(self): cost_D[neighbor][interface]}}
 
+        # add self to routing table at cost 0 for completeness/updating
         self.rt_tbl_D.update({str(self): {str(self): 0}})    # {destination: {router: cost}}
         print('%s: Initialized routing table' % self)
         self.print_routes()
@@ -193,10 +198,22 @@ class Router:
     ## send out route update
     # @param i Interface number on which to send out a routing update
     def send_routes(self, i):
-        # TODO: Send out a routing table update
+        # Done: Send out a routing table update
         # create a routing table update packet
-        s = str(self) + str(self.rt_tbl_D)
 
+        # create an empty dictionary
+        dist = {}
+        # for each destination
+        for destination in self.rt_tbl_D:
+            # be sure its really empty / only one sends of each destination
+            dist[destination] = {}
+            # add the cost to this destination as the cost to get there from this location
+            dist[destination][self.name] = self.rt_tbl_D[destination][self.name]
+
+        # json turns dictionaries into strings
+        s = json.dumps(dist)
+
+        # send the packet with the table info in DV form
         p = NetworkPacket(0, 'control', s)
         try:
             print('%s: sending routing update "%s" from interface %d' % (self, p, i))
@@ -213,13 +230,15 @@ class Router:
         # possibly send out routing updates
         print('%s: Received routing update %s from interface %d' % (self, p, i))
 
-        # who's routing table this is
-        p_from = p.data_S[0:2]
-        # the routing table
-        rec_table = p.data_S[2:]
+        # # who's routing table this is
+        # p_from = p.data_S[0:2]
+        # # the routing table
+        # rec_table = p.data_S[2:]
 
-        # r = "{.+?}" % rec_table
+        # r = re.match("{.+?}", rec_table)
+        # r = re.match("'.+?:.+?}", rec_table)
         #
+        # print("This is r ******************")
         # print(r)
         
     ## Print routing table
