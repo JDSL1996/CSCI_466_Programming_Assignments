@@ -2,11 +2,10 @@ import network_3 as network
 import link_3 as link
 import threading
 from time import sleep
-import sys
 
 ##configuration parameters
 router_queue_size = 0 #0 means unlimited
-simulation_time = 4   #give the network sufficient time to execute transfers
+simulation_time = 3   #give the network sufficient time to execute transfers
 
 if __name__ == '__main__':
     object_L = [] #keeps track of objects, so we can kill their threads at the end
@@ -14,13 +13,11 @@ if __name__ == '__main__':
     #create network hosts
     host_1 = network.Host('H1')
     object_L.append(host_1)
-    host_2 = network.Host('H2')
-    object_L.append(host_2)
     host_3 = network.Host('H3')
     object_L.append(host_3)
     
     #create routers and cost tables for reaching neighbors
-    cost_D = {'H1': {0: 1}, 'RB': {1: 1}, 'RC': {2: 3}, "H2": {3: 1}} # {neighbor: {interface: cost}}
+    cost_D = {'H1': {0: 1}, 'RB': {1: 1}, 'RC': {2: 3}} # {neighbor: {interface: cost}}
     router_a = network.Router(name='RA', 
                               cost_D = cost_D,
                               max_queue_size=router_queue_size)
@@ -52,7 +49,6 @@ if __name__ == '__main__':
     link_layer.add_link(link.Link(host_1, 0, router_a, 0))
     link_layer.add_link(link.Link(router_a, 1, router_b, 0))
     link_layer.add_link(link.Link(router_a, 2, router_c, 0))
-    link_layer.add_link(link.Link(router_a, 3, host_2, 0))
 
     link_layer.add_link(link.Link(router_b, 1, router_d, 0))
 
