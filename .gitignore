@@ -8,3 +8,6 @@ lib/python*
 \.project
 
 \.pydevproject
+*.xml
+*.iml
+venv*
