@@ -42,7 +42,12 @@ class Interface:
             # print('putting packet in the IN queue')
             self.in_queue.put(pkt, block)
             
-        
+## Impliments MLPS encapsulation of packets
+class MPLSFrame:
+    def __init__(self, label, p):
+        self.label = label
+        self.p = p
+
 ## Implements a network layer packet
 # NOTE: You will need to extend this class for the packet to include
 # the fields necessary for the completion of this assignment.
@@ -123,7 +128,6 @@ class Host:
             if(self.stop):
                 print (threading.currentThread().getName() + ': Ending')
                 return
-        
 
 
 ## Implements a multi-interface router
