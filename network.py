@@ -44,9 +44,26 @@ class Interface:
             
 ## Impliments MLPS encapsulation of packets
 class MPLSFrame:
+    ## frame label lengths
+    label_length = 20
+
     def __init__(self, label, p):
         self.label = label
         self.p = p
+
+    ## called when printing the object
+    def __str__(self):
+        return self.to_byte_S()
+
+    def to_byte_S(self):
+        byte_S = str(self.label).zfill(self.label_length)
+        byte_S += self.p.to_byte_S
+        return byte_S
+
+    @classmethod
+    def from_byte_S(self, byte_S):
+        return self(0, NetworkPacket.from_byte_S(byte_S))
+
 
 ## Implements a network layer packet
 # NOTE: You will need to extend this class for the packet to include
@@ -171,10 +188,8 @@ class Router:
                 p = NetworkPacket.from_byte_S(pkt_S) #parse a packet out
                 self.process_network_packet(p, i)
             elif fr.type_S == "MPLS":
-                # TODO: handle MPLS frames
-                # m_fr = MPLSFrame.from_byte_S(pkt_S) #parse a frame out
-                #for now, we just relabel the packet as an MPLS frame without encapsulation
-                m_fr = p
+                # Done?: handle MPLS frames
+                m_fr = MPLSFrame.from_byte_S(pkt_S) #parse a frame out
                 #send the MPLS frame for processing
                 self.process_MPLS_frame(m_fr, i)
             else:
@@ -185,8 +200,8 @@ class Router:
     #  @param i Incoming interface number for packet p
     def process_network_packet(self, pkt, i):
         #TODO: encapsulate the packet in an MPLS frame based on self.encap_tbl_D
-        #for now, we just relabel the packet as an MPLS frame without encapsulation
-        m_fr = pkt
+        # get the label from the table or return -1
+        m_fr = MPLSFrame(self.encap_tbl_D.get(i, -1), pkt)
         print('%s: encapsulated packet "%s" as MPLS frame "%s"' % (self, pkt, m_fr))
         #send the encapsulated packet for processing as MPLS frame
         self.process_MPLS_frame(m_fr, i)
