@@ -88,6 +88,15 @@ class Link:
                           ' - seconds until the next available time %f\n' \
                           ' - queue size %d' \
                           % (self, pkt_S, node_a, node_a_intf, node_b, node_b_intf, intf_a.next_avail_time - time.time(), intf_a.out_queue.qsize()))
+                    if intf_a.out_queue.qsize() is not 0:
+                        q = "------Items waiting on: "
+                        q += str(node_a)
+                        q += "-----\n"
+                        for x in list(intf_a.out_queue.queue):
+                            q += x[1]
+                            q += '\n'
+                        q += "\n"
+                        print(q)
                 # uncomment the lines below to see waiting time until next transmission
 #                 else:
 #                     print('%s: waiting to transmit packet on %s %s -> %s, %s for another %f milliseconds' % (self, node_a, node_a_intf, node_b, node_b_intf, intf_a.next_avail_time - time.time()))    

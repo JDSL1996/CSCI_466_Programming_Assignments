@@ -8,8 +8,8 @@ class Interface:
     ## @param maxsize - the maximum size of the queue storing packets
     #  @param capacity - the capacity of the link in bps
     def __init__(self, maxsize=0, capacity=500):
-        self.in_queue = queue.Queue(maxsize);
-        self.out_queue = queue.Queue(maxsize);
+        self.in_queue = queue.Queue(maxsize)
+        self.out_queue = queue.PriorityQueue(maxsize)
         self.capacity = capacity #serialization rate
         self.next_avail_time = 0 #the next time the interface can transmit a packet
     
@@ -23,7 +23,7 @@ class Interface:
                 #     print('getting packet from the IN queue')
                 return pkt_S
             else:
-                pkt_S = self.out_queue.get(False)
+                pkt_S = self.out_queue.get(False)[1]
                 # if pkt_S is not None:
                 #     print('getting packet from the OUT queue')
                 return pkt_S
@@ -34,10 +34,15 @@ class Interface:
     # @param pkt - Packet to be inserted into the queue
     # @param in_or_out - use 'in' or 'out' interface
     # @param block - if True, block until room in queue, if False may throw queue.Full exception
+    # @param priority
     def put(self, pkt, in_or_out, block=False):
         if in_or_out == 'out':
+            if pkt[0] is 'M':
+                prio = (-int(pkt[8]), pkt)
+            else:
+                prio = (-int(pkt[6]), pkt)
             # print('putting packet in the OUT queue')
-            self.out_queue.put(pkt, block)
+            self.out_queue.put(prio, block)
         else:
             # print('putting packet in the IN queue')
             self.in_queue.put(pkt, block)
@@ -45,7 +50,7 @@ class Interface:
 ## Impliments MLPS encapsulation of packets
 class MPLSFrame:
     ## frame label lengths
-    label_length = 20
+    label_length = 5
 
     def __init__(self, label, p):
         self.label = label
@@ -57,12 +62,14 @@ class MPLSFrame:
 
     def to_byte_S(self):
         byte_S = str(self.label).zfill(self.label_length)
-        byte_S += self.p.to_byte_S
+        byte_S += self.p.to_byte_S()
         return byte_S
 
     @classmethod
     def from_byte_S(self, byte_S):
-        return self(0, NetworkPacket.from_byte_S(byte_S))
+        label = byte_S[0: MPLSFrame.label_length].strip('0')
+        p = byte_S[MPLSFrame.label_length:]
+        return self(label, NetworkPacket.from_byte_S(p))
 
 
 ## Implements a network layer packet
@@ -78,7 +85,8 @@ class NetworkPacket:
     def __init__(self, dst, data_S, priority=0):
         self.dst = dst
         self.data_S = data_S
-        #TODO: add priority to the packet class
+        self.priority = priority
+        #Done: add priority to the packet class
         
     ## called when printing the object
     def __str__(self):
@@ -87,6 +95,7 @@ class NetworkPacket:
     ## convert packet to a byte string for transmission over links
     def to_byte_S(self):
         byte_S = str(self.dst).zfill(self.dst_S_length)
+        byte_S += str(self.priority)
         byte_S += self.data_S
         return byte_S
     
@@ -95,8 +104,9 @@ class NetworkPacket:
     @classmethod
     def from_byte_S(self, byte_S):
         dst = byte_S[0 : NetworkPacket.dst_S_length].strip('0')
-        data_S = byte_S[NetworkPacket.dst_S_length : ]        
-        return self(dst, data_S)
+        priority = byte_S[NetworkPacket.dst_S_length: NetworkPacket.dst_S_length + 1]
+        data_S = byte_S[NetworkPacket.dst_S_length + 1:]
+        return self(dst, data_S, priority)
     
 
 ## Implements a network host for receiving and transmitting data
@@ -117,7 +127,7 @@ class Host:
     # @param data_S: data being transmitted to the network layer
     # @param priority: packet priority
     def udt_send(self, dst, data_S, priority=0):
-        pkt = NetworkPacket(dst, data_S)
+        pkt = NetworkPacket(dst, data_S, priority)
         print('%s: sending packet "%s" with priority %d' % (self, pkt, priority))
         #encapsulate network packet in a link frame (usually would be done by the OS)
         fr = LinkFrame('Network', pkt.to_byte_S())
@@ -199,9 +209,10 @@ class Router:
     #  @param p Packet to forward
     #  @param i Incoming interface number for packet p
     def process_network_packet(self, pkt, i):
-        #TODO: encapsulate the packet in an MPLS frame based on self.encap_tbl_D
-        # get the label from the table or return -1
-        m_fr = MPLSFrame(self.encap_tbl_D.get(i, -1), pkt)
+        #done: encapsulate the packet in an MPLS frame based on self.encap_tbl_D
+        # get the label from the table
+        label = self.encap_tbl_D.get(pkt.dst)[0]
+        m_fr = MPLSFrame(label, pkt)
         print('%s: encapsulated packet "%s" as MPLS frame "%s"' % (self, pkt, m_fr))
         #send the encapsulated packet for processing as MPLS frame
         self.process_MPLS_frame(m_fr, i)
@@ -211,16 +222,31 @@ class Router:
     #  @param m_fr: MPLS frame to process
     #  @param i Incoming interface number for the frame
     def process_MPLS_frame(self, m_fr, i):
-        #TODO: implement MPLS forward, or MPLS decapsulation if this is the last hop router for the path
+        #Done: implement MPLS forward, or MPLS decapsulation if this is the last hop router for the path
         print('%s: processing MPLS frame "%s"' % (self, m_fr))
-        # for now forward the frame out interface 1
-        try:
-            fr = LinkFrame('Network', m_fr.to_byte_S())
-            self.intf_L[1].put(fr.to_byte_S(), 'out', True)
-            print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, 1))
-        except queue.Full:
-            print('%s: frame "%s" lost on interface %d' % (self, m_fr, i))
-            pass
+        # if the label suggests its time to decapsulate do so and send out correct interface
+        if m_fr.label in self.decap_tbl_D:
+            decap_inter = self.decap_tbl_D[m_fr.label]
+            fr = LinkFrame('Network', m_fr.p.to_byte_S())
+            try:
+                self.intf_L[decap_inter].put(fr.to_byte_S(), 'out', True)
+                print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, decap_inter))
+            except queue.Full:
+                print('%s: frame "%s" lost on interface %d' % (self, m_fr, i))
+                pass
+        # otherwise we must have to forward it so find that interface
+        else:
+            try:
+                # forward info (out label, out int)
+                forward = self.frwd_tbl_D[m_fr.label][int(i)]
+                m_fr.label = forward[0]
+                fr = LinkFrame('MPLS', m_fr.to_byte_S())
+                # self.frwd_tbl_D = in label: {in interface: (out label, out int)}
+                self.intf_L[forward[1]].put(fr.to_byte_S(), 'out', True)
+                print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, forward[1]))
+            except queue.Full:
+                print('%s: frame "%s" lost on interface %d' % (self, m_fr, i))
+                pass
         
                 
     ## thread target for the host to keep forwarding data
